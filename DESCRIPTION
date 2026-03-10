@@ -1,0 +1,63 @@
+Package: HCCMultiOmics
+Title: An Integrative AutoML Framework for Multiscale Biological Discovery
+Version: 0.1.0
+Author: Zhuo Chen [aut, cre]
+Maintainer: Zhuo Chen <cz050529@163.com>
+Authors@R: 
+    person("Zhuo", "Chen", email = "cz050529@163.com", role = c("aut", "cre"))
+Description: A comprehensive and automated workflow designed to translate multi-omics 
+    data into actionable biological mechanisms. The framework integrates an ensemble 
+    machine learning engine (LASSO, RSF, XGBoost) for robust prognostic biomarker 
+    discovery, coupled with an adaptive single-cell mechanistic decoding module to 
+    profile intracellular trajectories, stemness, and intercellular communication.
+License: MIT + file LICENSE
+URL: https://github.com/hepatology-will/HCCMultiOmics
+BugReports: https://github.com/hepatology-will/HCCMultiOmics/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends: 
+    R (>= 4.1.0)
+Imports: 
+    data.table,
+    dplyr,
+    ggplot2,
+    ggrepel,
+    glmnet,
+    grid,
+    magrittr,
+    methods,
+    patchwork,
+    pheatmap,
+    pROC,
+    randomForestSRC,
+    reshape2,
+    scales,
+    stats,
+    survival,
+    survminer,
+    tibble,
+    tidyr,
+    viridis,
+    xgboost,
+    Matrix
+Suggests: 
+    BiocParallel,
+    caret,
+    CellChat,
+    circlize,
+    ComplexHeatmap,
+    CytoTRACE,
+    e1071,
+    gbm,
+    harmony,
+    kernlab,
+    mediation,
+    msigdbr,
+    Seurat,
+    SingleCellExperiment,
+    slingshot,
+    SummarizedExperiment,
+    tradeSeq,
+    VennDiagram
+LazyData: true
