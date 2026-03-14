@@ -34,7 +34,7 @@ You can install the development version of HCCMultiOmics from [GitHub](https://g
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("yourusername/HCCMultiOmics")
+devtools::install_github("hepatology-will/HCCMultiOmics")
 ```
 
 ## Data Requirements
@@ -83,18 +83,27 @@ plot_rsf_vimp(result)
 plot_xgb_imp(result)
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+## Documentation
 
-```{r cars}
-summary(cars)
+For detailed documentation and examples, please visit the [package website](https://github.com/hepatology-will/HCCMultiOmics).
+
+## Citation
+
+If you use HCCMultiOmics in your research, please cite:
+
+``` bibtex
+@software{HCCMultiOmics,
+  author = {Zhuo Chen},
+  title = {HCCMultiOmics: An Integrative AutoML Framework for Multiscale Biological Discovery},
+  year = {2025},
+  url = {https://github.com/hepatology-will/HCCMultiOmics}
+}
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+## Contributing
 
-You can also embed plots, for example:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-```{r pressure, echo = FALSE}
-plot(pressure)
-```
+## License
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+This package is licensed under the MIT License. See the LICENSE file for details.
