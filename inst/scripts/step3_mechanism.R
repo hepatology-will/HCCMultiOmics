@@ -8,11 +8,17 @@
 # =============================================================================
 
 if (!require("HCCMultiOmics", quietly = TRUE)) {
-  if (!require("devtools", quietly = TRUE)) install.packages("devtools")
+  if (!require("devtools", quietly = TRUE)) {
+    options(repos = c(CRAN = "https://cloud.r-project.org"))
+    install.packages("devtools")
+  }
   devtools::install_github("hepatology-will/HCCMultiOmics")
 }
 if (!require("HiClimR", quietly = TRUE)) {
-  if (!require("devtools", quietly = TRUE)) install.packages("devtools")
+  if (!require("devtools", quietly = TRUE)) {
+    options(repos = c(CRAN = "https://cloud.r-project.org"))
+    install.packages("devtools")
+  }
   devtools::install_github("andymarty/HiClimR")
 }
 library(HCCMultiOmics)
