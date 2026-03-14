@@ -12,7 +12,7 @@ cd "$PROJECT_ROOT"
 THREADS=10
 INPUT="inst/scripts/hcc_output/step3/scenic_input.csv"
 OUTPUT="inst/scripts/hcc_output/step4"
-DATA="scenic_extdata"
+DATA="inst/scripts/scenic_extdata"
 
 # Help
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
@@ -78,13 +78,14 @@ ABS_DATA="$(readlink -f "$DATA" || echo "$DATA")"
 ABS_OUTPUT="$(readlink -f "$OUTPUT" || echo "$OUTPUT")"
 
 # Create fixed Python script
+
 cat > "$PYTHON_SCRIPT" << EOF
 import os
 import pandas as pd
 import numpy as np
 from arboreto.algo import grnboost2
+from dask.distributed import Client, LocalCluster 
 
-# --- 修正点 1: 新版 API 路径 ---
 try:
     from ctxcore.rnkdb import FeatherRankingDatabase 
     from pyscenic.utils import modules_from_adjacencies, load_motifs
@@ -95,7 +96,6 @@ except ImportError as e:
     print("Make sure pyscenic is installed: pip install pyscenic")
     exit(1)
 
-# ================= 配置区域 =================
 F_EXPRESSION = "$ABS_INPUT"
 F_TFS = "$ABS_DATA/hs_hgnc_tfs.txt"
 F_MOTIFS = "$ABS_DATA/motifs-v9-nr.hgnc-m0.001-o0.0.tbl"
@@ -120,7 +120,12 @@ def run():
     print(f"Loaded {len(tf_names)} TFs.")
 
     print("Step 2: Inferring Co-expression Network (GRNBoost2)...")
-    adjacencies = grnboost2(ex_matrix, tf_names=tf_names, verbose=True, num_workers=N_CPU)
+    custom_cluster = LocalCluster(n_workers=N_CPU, threads_per_worker=1)
+    custom_client = Client(custom_cluster)
+    
+    adjacencies = grnboost2(ex_matrix, tf_names=tf_names, verbose=True, client_or_address=custom_client)
+    
+    custom_client.close()
 
     print("Step 3: Pruning Network with Motifs (CTX)...")
     modules = modules_from_adjacencies(adjacencies, ex_matrix)
@@ -142,7 +147,7 @@ def run():
     auc_mtx.to_csv(F_OUTPUT_CSV)
     print(f"Saved AUC matrix to: {F_OUTPUT_CSV}")
     
-    print("\\n✓ SCENIC analysis completed successfully!")
+    print("\n✓ SCENIC analysis completed successfully!")
     print(f"  - Regulons: {F_OUTPUT_REGULONS}")
     print(f"  - AUC matrix: {F_OUTPUT_CSV}")
 

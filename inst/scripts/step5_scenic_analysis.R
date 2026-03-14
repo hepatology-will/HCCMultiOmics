@@ -7,6 +7,11 @@
 #   Rscript inst/scripts/step5_scenic_analysis.R --target EZH2 --downstream SLC7A11
 # =============================================================================
 
+if (!require("HCCMultiOmics", quietly = TRUE)) {
+  if (!require("devtools", quietly = TRUE)) install.packages("devtools")
+  devtools::install_github("hepatology-will/HCCMultiOmics")
+}
+if (!require("Seurat", quietly = TRUE)) install.packages("Seurat")
 library(HCCMultiOmics)
 library(tidyverse)
 library(patchwork)

@@ -7,6 +7,14 @@
 #   Rscript inst/scripts/step3_mechanism.R --type 2
 # =============================================================================
 
+if (!require("HCCMultiOmics", quietly = TRUE)) {
+  if (!require("devtools", quietly = TRUE)) install.packages("devtools")
+  devtools::install_github("hepatology-will/HCCMultiOmics")
+}
+if (!require("HiClimR", quietly = TRUE)) {
+  if (!require("devtools", quietly = TRUE)) install.packages("devtools")
+  devtools::install_github("andymarty/HiClimR")
+}
 library(HCCMultiOmics)
 library(tidyverse)
 library(patchwork)

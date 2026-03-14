@@ -8,6 +8,11 @@
 #   Rscript inst/scripts/step2_singlecell.R --help
 # =============================================================================
 
+if (!require("HCCMultiOmics", quietly = TRUE)) {
+  if (!require("devtools", quietly = TRUE)) install.packages("devtools")
+  devtools::install_github("hepatology-will/HCCMultiOmics")
+}
+if (!require("Seurat", quietly = TRUE)) install.packages("Seurat")
 library(HCCMultiOmics)
 
 # ============== Argument Parsing ==============

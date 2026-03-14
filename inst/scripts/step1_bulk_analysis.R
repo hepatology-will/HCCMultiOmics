@@ -9,6 +9,10 @@
 #   Rscript inst/scripts/step1_bulk_analysis.R --help
 # =============================================================================
 
+if (!require("HCCMultiOmics", quietly = TRUE)) {
+  if (!require("devtools", quietly = TRUE)) install.packages("devtools")
+  devtools::install_github("hepatology-will/HCCMultiOmics")
+}
 library(HCCMultiOmics)
 
 # ============== Argument Parsing ==============
