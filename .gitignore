@@ -5,10 +5,8 @@
 *.Rcheck/
 *.tar.gz
 *.pdf
-*.png
 *.jpg
 *.jpeg
-*.log
 .DS_Store
 Thumbs.db
 inst/scripts/*.rda
