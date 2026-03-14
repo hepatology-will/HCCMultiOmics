@@ -4,96 +4,188 @@
 
 # HCCMultiOmics
 
-<!-- badges: start -->
 [![R-CMD-check](https://github.com/hepatology-will/HCCMultiOmics/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/hepatology-will/HCCMultiOmics/actions/workflows/R-CMD-check.yaml)
-<!-- badges: end -->
 
-HCCMultiOmics is an integrative AutoML framework for multiscale biological discovery in Hepatocellular Carcinoma (HCC). The package provides a comprehensive and automated workflow designed to translate multi-omics data into actionable biological mechanisms.
-
-## Features
-
-- **Module A: Bulk Analysis**: Ensemble machine learning engine (LASSO, RSF, XGBoost) for robust prognostic biomarker discovery
-- **Module B: Single-cell Analysis**: Adaptive single-cell mechanistic decoding module to profile intracellular trajectories, stemness, and intercellular communication
-- **Integrated Workflow**: Seamless transition from bulk to single-cell analysis
-- **Automated Visualization**: Comprehensive plotting functions for results interpretation
+HCCMultiOmics is an integrative analysis framework for multiscale biological discovery in Hepatocellular Carcinoma (HCC). It provides a complete workflow from bulk RNA-seq biomarker discovery to single-cell mechanism validation.
 
 ## Installation
 
-You can install the development version of HCCMultiOmics from [GitHub](https://github.com/hepatology-will/HCCMultiOmics) with:
+```r
+# Install devtools if not already installed
+install.packages("devtools")
 
-``` r
-# install.packages("devtools")
+# Install HCCMultiOmics
 devtools::install_github("hepatology-will/HCCMultiOmics")
 ```
 
-## Data Requirements
+## Workflow Overview
 
-For SCENIC analysis, large database files are required but not included in the package due to size constraints. The package includes automatic download functionality.
+The package provides a **5-step workflow**:
 
-### Automatic Download (Recommended)
+```
+Step 1: Bulk Analysis (Machine Learning)
+    ↓
+Step 2: Single-cell Gene Expression Visualization  
+    ↓
+Step 3: Mechanism Analysis
+    ↓
+Step 4: SCENIC Analysis (Python)
+    ↓
+Step 5: SCENIC Downstream Analysis
+```
+
+## Step-by-Step Guide
+
+### Step 1: Bulk RNA-seq Analysis
+
+Select candidate genes using ensemble machine learning (LASSO, RSF, XGBoost).
 
 ```bash
-# Download SCENIC database files
+# Using built-in gene sets
+Rscript inst/scripts/step1_bulk_analysis.R --builtin 1
+
+# Using custom gene set
+Rscript inst/scripts/step1_bulk_analysis.R --custom genes.csv
+```
+
+**Built-in Gene Sets:**
+- 1. Ferroptosis_FerrDb
+- 2. Cuproptosis_FerrDb
+- 3. Disulfidptosis
+- 4. Autosis
+- 5. immunogonic_cell_death
+- 6. mitotic_death
+- 7. parthanatos
+
+**Output:** Candidate gene list in `hcc_output/step1/`
+
+---
+
+### Step 2: Single-cell Visualization
+
+Visualize target gene expression in single-cell data.
+
+```bash
+# Using local single-cell data
+Rscript inst/scripts/step2_singlecell.R --gene YOUR_GENE
+
+# Auto-download single-cell data from Zenodo
+Rscript inst/scripts/step2_singlecell.R --gene YOUR_GENE --data auto
+```
+
+**Output:** Expression plots in `hcc_output/step2/`
+
+You will get two analysis types:
+- **Type 1**: Mean expression
+- **Type 2**: Positive cell ratio
+
+Choose the type with better separation for downstream analysis.
+
+---
+
+### Step 3: Mechanism Analysis
+
+Analyze gene mechanisms in malignant hepatocytes.
+
+```bash
+# Using mean expression (type 1)
+Rscript inst/scripts/step3_mechanism.R --type 1
+
+# Using positive cell ratio (type 2)
+Rscript inst/scripts/step3_mechanism.R --type 2
+```
+
+**Output:** Mechanism analysis results in `hcc_output/step3/`
+
+---
+
+### Step 4: SCENIC Analysis
+
+Run SCENIC for transcription factor regulatory network analysis.
+
+```bash
+# First, download SCENIC database files (required)
 ./inst/scripts/download_scenic_files.sh
 
-# Check if files are available
-./inst/scripts/step4_scenic.sh --check-only
+# Run SCENIC (requires Python environment with pyscenic)
+bash inst/scripts/step4_scenic.sh 10
 ```
 
-### Manual Download (Alternative)
+**Python Requirements:**
+```bash
+pip install pandas numpy pyscenic arboreto ctxcore
+```
 
-If automatic download fails, manually download from Zenodo:
-1. `hg38__refseq-r80__10kb_up_and_down_tss.mc9nr.genes_vs_motifs.rankings.feather` (~1.2GB)
-2. `motifs-v9-nr.hgnc-m0.001-o0.0.tbl` (~99MB)
+**Output:** AUC matrix and regulons in `hcc_output/step4/`
 
-Place downloaded files in `inst/extdata/` directory.
+---
 
-### Running Analysis with Auto-Download
+### Step 5: SCENIC Downstream Analysis
+
+Analyze TF enrichment and visualize results.
 
 ```bash
-# Step 4 will automatically download dependencies
-bash inst/scripts/step4_scenic.sh
-
-# With custom options
-bash inst/scripts/step4_scenic.sh --threads 20 --force
+Rscript inst/scripts/step5_scenic_analysis.R --target EZH2 --downstream SLC7A11
 ```
 
-## Quick Start
+**Output:** TF enrichment plots in `hcc_output/step5/`
 
+---
 
-``` r
-library(HCCMultiOmics)
+## Data Requirements
 
-# Run prognostic model with ensemble ML
-result <- run_prognostic_model(candidate_genes)
+### Required Data Files
 
-# Visualize results
+Place the following files in the working directory:
+
+| File | Description |
+|------|-------------|
+| `TCGA_Expr_Mat.rda` | TCGA expression matrix |
+| `TCGA_Clin_Data.rda` | TCGA clinical data |
+| `TCGA_LIHC_DEGs.rda` | TCGA LIHC differential genes |
+| `HCC_sc_data.rda` | Single-cell data (or auto-download) |
+
+### SCENIC Database Files
+
+Download via:
+```bash
+./inst/scripts/download_scenic_files.sh
+```
+
+Or manually from [Zenodo](https://zenodo.org/records/18642056), place in `inst/scripts/scenic_extdata/`.
+
+## Package Functions
+
+Key functions for programmatic use:
+
+```r
+# Run prognostic model
+result <- run_prognostic_model(candidate_genes, seed = 123)
+
+# Run diagnostic model
+diag_result <- run_diagnostic_model(candidate_genes)
+
+# Visualization
+plot_lasso_cv(result)
 plot_lasso_coef(result)
+plot_rsf_process(result)
 plot_rsf_vimp(result)
 plot_xgb_imp(result)
+plot_gene_survival(gene = "EZH2")
+plot_sc_gene(seurat_object, gene = "EZH2")
 ```
-
-## Documentation
-
-For detailed documentation and examples, please visit the [package website](https://github.com/hepatology-will/HCCMultiOmics).
 
 ## Citation
 
-If you use HCCMultiOmics in your research, please cite:
-
-``` bibtex
+```bibtex
 @software{HCCMultiOmics,
   author = {Zhuo Chen},
-  title = {HCCMultiOmics: An Integrative AutoML Framework for Multiscale Biological Discovery},
+  title = {HCCMultiOmics: An Integrative Analysis Framework for HCC Multi-omics},
   year = {2025},
   url = {https://github.com/hepatology-will/HCCMultiOmics}
 }
 ```
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ## License
 
-This package is licensed under the MIT License. See the LICENSE file for details.
+MIT License
