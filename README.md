@@ -4,11 +4,7 @@
 
 # HCCMultiOmics
 
-[![R-CMD-check](https://github.com/hepatology-will/HCCMultiOmics/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/hepatology-will/HCCMultiOmics/actions/workflows/R-CMD-check.yaml)
-
 HCCMultiOmics provides an integrative analysis workflow for hepatocellular carcinoma (HCC) multi-omics data, spanning from bulk RNA-seq biomarker discovery to single-cell mechanism validation.
-
-> **R CMD check badge**: This badge indicates that the package has passed R's standard quality checks for package validity, documentation, and examples.
 
 ---
 
@@ -84,7 +80,7 @@ bash download_scenic_files.sh
 ```
 
 **Option 2: Manual Download**
-Download from Zenodo and place in `inst/scripts/scenic_extdata/`:
+Download from [Zenodo](https://zenodo.org/records/18901480) and place in `inst/scripts/scenic_extdata/`:
 - `hg38__refseq-r80__10kb_up_and_down_tss.mc9nr.genes_vs_motifs.rankings.feather`
 - `motifs-v9-nr.hgnc-m0.001-o0.0.tbl`
 - `hs_hgnc_tfs.txt`
@@ -136,24 +132,19 @@ Rscript step1_bulk_analysis.R --builtin 1 --seed 123
 
 **Custom Gene Set Format:**
 
-CSV file with one of the following column combinations:
+1. CSV/TXT file with columns (all required):
 
 ```csv
-all_genes
-GeneA
-GeneB
-GeneC
+all_genes,drivers,suppressors,syml
+GeneA,GeneB,GeneC,
+GeneD,,GeneE,GeneF
 ```
 
-Or with driver/suppressor genes:
+All columns required. Use empty values if no genes in that category.
 
-```csv
-all_genes,drivers,suppressors
-GeneA,GeneB,
-GeneC,,GeneD
-```
+2. RDS/RData file: Save GeneSet object from the package
 
-Or plain text (one gene per line):
+3. Plain text (one gene per line):
 ```
 GeneA
 GeneB
