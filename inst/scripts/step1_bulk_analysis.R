@@ -226,17 +226,51 @@ pdf(file.path(OUTPUT_DIR, "xgb_importance.pdf"), width = 8, height = 6)
 plot_xgb_imp(res_ml)
 dev.off()
 
-pdf(file.path(OUTPUT_DIR, "model_venn.pdf"), width = 8, height = 8)
-plot_model_venn(res_ml, top_n = 5)
-dev.off()
+# Calculate dynamic top_n based on candidate gene count
+top_n_val <- max(1, min(5, floor(length(res$candidates) / 2)))
+cat(sprintf(">>> Using top_n = %d for model intersection (based on %d candidates)\n", top_n_val, length(res$candidates)))
+flush.console()
 
-res_diag <- run_diagnostic_model(res$candidates)
+# Generate model venn diagram with dynamic top_n
+cat(">>> Generating model venn diagram...\n")
+flush.console()
+tryCatch({
+  pdf(file.path(OUTPUT_DIR, "model_venn.pdf"), width = 8, height = 8)
+  plot_model_venn(res_ml, top_n = top_n_val)
+  dev.off()
+}, error = function(e) {
+  cat(sprintf(">>> Warning: Failed to generate model venn diagram - %s\n", e$message))
+  flush.console()
+})
 
-saveRDS(res_diag, file.path(OUTPUT_DIR, "diag_result.rds"))
+cat(">>> Checking candidate gene count for diagnostic model...\n")
+cat(sprintf(">>> Candidate genes: %d\n", length(res$candidates)))
+flush.console()
 
-pdf(file.path(OUTPUT_DIR, "diag_heatmap.pdf"), width = 10, height = 8)
-plot_diag_heatmap(res_diag, 10)
-dev.off()
+# Run diagnostic model if candidate genes are sufficient (at least 2)
+if (length(res$candidates) >= 2) {
+  cat(">>> Running diagnostic model...\n")
+  flush.console()
+  tryCatch({
+    res_diag <- run_diagnostic_model(res$candidates)
+    saveRDS(res_diag, file.path(OUTPUT_DIR, "diag_result.rds"))
+    
+    diag_top_n <- max(2, min(10, length(res$candidates)))
+    pdf(file.path(OUTPUT_DIR, "diag_heatmap.pdf"), width = 10, height = 8)
+    plot_diag_heatmap(res_diag, diag_top_n)
+    dev.off()
+  }, error = function(e) {
+    cat(sprintf(">>> Warning: Diagnostic model failed - %s\n", e$message))
+    flush.console()
+  })
+} else {
+  cat(sprintf(">>> Warning: Only %d candidate genes, skipping diagnostic model (need >= 2)\n", length(res$candidates)))
+  flush.console()
+  res_diag <- NULL
+}
+
+cat(">>> Diagnostic model complete, saving results...\n")
+flush.console()
 
 # Save candidate gene list
 write.csv(
