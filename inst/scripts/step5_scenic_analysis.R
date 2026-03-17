@@ -8,11 +8,11 @@
 # =============================================================================
 
 if (!require("HCCMultiOmics", quietly = TRUE)) {
-  if (!require("devtools", quietly = TRUE)) {
+  if (!require("remotes", quietly = TRUE)) {
     options(repos = c(CRAN = "https://cloud.r-project.org"))
-    install.packages("devtools")
+    install.packages("remotes")
   }
-  devtools::install_github("hepatology-will/HCCMultiOmics")
+  remotes::install_github("hepatology-will/HCCMultiOmics")
 }
 if (!require("Seurat", quietly = TRUE)) {
   options(repos = c(CRAN = "https://cloud.r-project.org"))
