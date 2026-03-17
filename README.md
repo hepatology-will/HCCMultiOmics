@@ -130,9 +130,7 @@ Rscript step1_bulk_analysis.R --builtin 1 --seed 123
 | 6 | mitotic_death |
 | 7 | parthanatos |
 
-**Custom Gene Set Format:**
-
-1. CSV/TXT file with columns (all required):
+**Custom Gene Set Format (CSV only):**
 
 ```csv
 all_genes,drivers,suppressors,syml
@@ -140,21 +138,29 @@ GeneA,GeneB,GeneC,
 GeneD,,GeneE,GeneF
 ```
 
-All columns required. Use empty values if no genes in that category.
-
-2. RDS/RData file: Save GeneSet object from the package
-
-3. Plain text (one gene per line):
-```
-GeneA
-GeneB
-GeneC
-```
+All four columns required. Use empty values if no genes in that category.
 
 **Output:** `hcc_output/step1/`
+
+**Result Tables:**
 - `candidate_genes.csv` - List of candidate genes for next step
-- `diag_result.rds` - Diagnostic model results
-- Various PDF plots (model performance, Venn diagrams)
+- `diag_result.rds` - Diagnostic model results (RDS format)
+
+**Result Figures:**
+- `venn_diagram.pdf` - Venn diagram showing gene set intersection with TCGA DEGs
+- `lasso_cv.pdf` - LASSO cross-validation plot showing optimal lambda
+- `lasso_coef.pdf` - LASSO coefficient plot showing selected genes
+- `rsf_process.pdf` - Random Survival Forest survival curves
+- `rsf_vimp.pdf` - RSF variable importance plot
+- `xgb_importance.pdf` - XGBoost feature importance plot
+- `model_venn.pdf` - Venn diagram of genes selected by all 3 models
+- `diag_heatmap.pdf` - Diagnostic model heatmap
+
+**How to interpret:**
+1. Check `venn_diagram.pdf` to see overlap between your gene set and TCGA DEGs
+2. Review model performance plots (`lasso_cv.pdf`, `rsf_process.pdf`) to assess model quality
+3. Select candidate genes from `candidate_genes.csv` based on model selection
+4. Choose one target gene for Step 2
 
 **Next step:** Select one candidate gene from the output and proceed to Step 2.
 
@@ -182,14 +188,30 @@ Rscript step2_singlecell.R --gene YOUR_GENE --data auto
 ```
 
 **Output:** `hcc_output/step2/`
-- `sc_landscape.pdf` - Overall single-cell landscape
-- `{GENE}_landscape.pdf` - Gene expression on UMAP
-- `{GENE}_stat_type1.pdf` - Mean expression by cell type
-- `{GENE}_stat_type2.pdf` - Positive cell ratio by cell type
-- `top_cells.rds` - Cell types with highest expression (for Step 3)
-- `target_gene.rds` - Target gene name (for Step 3)
 
-**Key Decision:** Look at the output plots to decide which type (1 or 2) shows better separation, then proceed to Step 3.
+**Result Tables:**
+- `target_gene.rds` - Target gene name (for Step 3)
+- `top_cells.rds` - Cell types with highest expression (for Step 3)
+
+**Result Figures:**
+- `sc_landscape.pdf` - Overall single-cell landscape showing all cell types
+- `{GENE}_diag_score.pdf` - Diagnostic score comparison across cell types
+- `{GENE}_survival.pdf` - Survival curve stratified by gene expression
+- `{GENE}_landscape.pdf` - Gene expression on UMAP (FeaturePlot + Violin)
+- `{GENE}_stat_type1.pdf` - Mean expression by cell type (Type 1)
+- `{GENE}_stat_type2.pdf` - Positive cell ratio by cell type (Type 2)
+
+**How to interpret:**
+1. Review `sc_landscape.pdf` to understand cell type composition
+2. Check `{GENE}_stat_type1.pdf` and `{GENE}_stat_type2.pdf` to identify which cell type has highest expression
+3. Look at `{GENE}_survival.pdf` for prognostic value
+4. Choose the type (1 or 2) that shows better separation between cell types
+5. If highest expression is in **hepatocytes** (malignant cells) → Proceed to Step 3
+6. If highest expression is in **non-hepatocytes** (immune/stromal cells) → Microenvironment analysis ends here
+
+**Key Decision:** Based on which cell type shows highest expression:
+- **Hepatocytes** → Step 3 (Mechanism + SCENIC workflow)
+- **Non-hepatocytes** → Workflow ends (microenvironment analysis)
 
 ---
 
@@ -220,14 +242,58 @@ Rscript step3_mechanism.R --type 2
 - Top expressing cell types from `hcc_output/step2/top_cells.rds`
 
 **Output:** `hcc_output/step3/`
-- Trajectory analysis plots
-- Stemness analysis results
-- Ligand-receptor communication analysis
-- `scenic_input.csv` - Expression matrix for SCENIC (only if in hepatocytes path)
 
-**Next step:**
-- If target gene in hepatocytes → Proceed to Step 4
-- If target gene in non-hepatocytes → Workflow ends here
+This step has two possible workflows based on cell type:
+
+#### Workflow 1: Hepatocytes (Malignant Cells)
+
+**Result Figures:**
+- `{GENE}_by_site.pdf` - Gene expression across different sites
+- `malignant_stats.pdf` - Malignant cell statistics
+- `malignant_umap.pdf` - Malignant cell UMAP visualization
+- `malignant_clusters.pdf` - Malignant cell clustering
+- `cyto_score.pdf` - CytoTRACE stemness score
+- `cyto_violin.pdf` - Stemness score violin plot
+- `trajectory.pdf` - Trajectory analysis (pseudotime)
+- `pseudotime.pdf` - Pseudotime distribution
+- `driver_cor.pdf` - Driver gene correlations
+- `driver_trend.pdf` - Driver gene trends along pseudotime
+- `suppressor_cor.pdf` - Suppressor gene correlations
+- `suppressor_trend.pdf` - Suppressor gene trends along pseudotime
+- `syml_screening.pdf` - Synthetic lethal gene screening
+- `{GENE}_{SYML}_density.pdf` - Density plot for top synthetic lethal gene
+- `tradeseq_heatmap.pdf` - TradeSeq heatmap
+- `tradeseq_trends.pdf` - Gene expression trends
+- `{GENE}_pseudotime_trend.pdf` - Target gene trend along pseudotime
+
+**Result Tables:**
+- `scenic_input.csv` - Expression matrix for SCENIC analysis
+
+**How to interpret:**
+1. Review `malignant_umap.pdf` and `malignant_clusters.pdf` to understand malignant cell populations
+2. Check `cyto_score.pdf` and `cyto_violin.pdf` for stemness analysis
+3. Review `trajectory.pdf` and `pseudotime.pdf` for developmental trajectory
+4. Analyze driver/suppressor gene trends along pseudotime
+5. Use `scenic_input.csv` for Step 4 SCENIC analysis
+
+**Next step:** Proceed to Step 4 (SCENIC Analysis)
+
+---
+
+#### Workflow 2: Non-hepatocytes (TME Cells)
+
+**Result Figures:**
+- `ligand_bubble.pdf` - Ligand-receptor interaction bubble plot
+- `stromal_function.pdf` - Stromal cell function analysis
+- `immune_landscape.pdf` - Immune cell landscape visualization
+- `immune_scatter_grid.pdf` - Immune cell scatter plots
+
+**How to interpret:**
+1. Review `ligand_bubble.pdf` for ligand-receptor interactions
+2. Check `stromal_function.pdf` for stromal cell functional analysis
+3. Review `immune_landscape.pdf` and `immune_scatter_grid.pdf` for immune microenvironment
+
+**Workflow ends here** - This path analyzes tumor microenvironment interactions.
 
 ---
 
@@ -255,8 +321,15 @@ bash step4_scenic.sh 10
 **Important:** Requires Python environment with pyscenic installed.
 
 **Output:** `hcc_output/step4/`
-- `regulons.csv` - TF regulons
-- `AUC_matrix.csv` - AUC scores for each cell
+
+**Result Tables:**
+- `regulons.csv` - Transcription factor regulons (TF-target gene relationships)
+- `AUC_matrix.csv` - AUC scores for each regulon in each cell
+
+**How to interpret:**
+1. `regulons.csv` contains TF-target gene pairs identified by SCENIC
+2. `AUC_matrix.csv` shows regulon activity scores across single cells
+3. These files are used for downstream TF enrichment analysis in Step 5
 
 **Next step:** Proceed to Step 5 for downstream analysis.
 
@@ -264,7 +337,7 @@ bash step4_scenic.sh 10
 
 ### Step 5: SCENIC Downstream Analysis
 
-**Purpose:** Identify key transcription factors and analyze regulatory relationships.
+**Purpose:** Identify key transcription factors and analyze regulatory relationships between TFs and your target gene.
 
 **What it does:**
 1. Performs TF enrichment analysis
@@ -288,9 +361,18 @@ Rscript step5_scenic_analysis.R --target EZH2 --downstream SLC7A11
 ```
 
 **Output:** `hcc_output/step5/`
-- TF enrichment heatmaps
+
+**Result Figures:**
+- TF enrichment heatmaps showing TF activity
 - Mediator TF analysis plots
-- Network visualizations
+- Network visualizations showing TF-target gene regulatory relationships
+
+**How to interpret:**
+1. Review TF enrichment heatmaps to identify TFs with high activity
+2. Check mediator TF analysis for intermediate TFs between your target and downstream gene
+3. Network plots show regulatory relationships between TFs and target genes
+
+**Workflow complete!**
 
 ---
 
