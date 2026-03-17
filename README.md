@@ -96,7 +96,7 @@ pip install pandas numpy pyscenic arboreto ctxcore
 
 ### Step 1: Bulk RNA-seq Analysis
 
-**Purpose:** Identify candidate prognostic genes using machine learning on TCGA bulk RNA-seq data.
+**Purpose:** Build prognostic and diagnostic models to screen candidate genes associated with prognosis from your selected gene set.
 
 **What it does:**
 1. Intersects your selected gene set with TCGA LIHC differential genes to find candidate genes
@@ -350,7 +350,7 @@ bash step4_scenic.sh 10
 
 ### Step 5: SCENIC Downstream Analysis
 
-**Purpose:** Identify key transcription factors and analyze regulatory relationships between TFs, your target gene, and a downstream gene of interest.
+**Purpose:** Identify key transcription factors and analyze regulatory relationships between TFs, your target gene, and a downstream gene of interest (identified from Step 3 syml analysis).
 
 **What it does:**
 1. Loads SCENIC AUC matrix and regulons from Step 4
@@ -364,7 +364,7 @@ bash step4_scenic.sh 10
 cd inst/scripts
 
 # --target: Your target gene from Step 2
-# --downstream: Downstream gene of interest
+# --downstream: Downstream gene from Step 3 syml correlation analysis
 Rscript step5_scenic_analysis.R --target YOUR_GENE --downstream DOWNSTREAM_GENE
 ```
 
