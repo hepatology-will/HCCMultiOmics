@@ -99,10 +99,10 @@ pip install pandas numpy pyscenic arboreto ctxcore
 **Purpose:** Identify candidate prognostic genes using machine learning on TCGA bulk RNA-seq data.
 
 **What it does:**
-1. Intersects your selected gene set with TCGA differential genes
-2. Trains three ensemble ML models (LASSO, RSF, XGBoost)
-3. Identifies candidate genes that are prognostic
-4. Builds diagnostic model for the candidate genes
+1. Intersects your selected gene set with TCGA LIHC differential genes to find candidate genes
+2. Trains three ensemble ML models (LASSO, RSF, XGBoost) for survival prediction
+3. Identifies genes selected by all three models as final candidate genes
+4. Builds a diagnostic model based on the candidate genes
 
 **How to run:**
 
@@ -171,9 +171,12 @@ All four columns required. Use empty values if no genes in that category.
 **Purpose:** Visualize target gene expression across different cell types in single-cell data to determine the downstream analysis path.
 
 **What it does:**
-1. Shows target gene expression on UMAP (FeaturePlot + Violin)
-2. Calculates mean expression (Type 1) and positive cell ratio (Type 2) per cell type
-3. Identifies which cell type has the highest expression
+1. Generates diagnostic score bar plot from Step 1 diagnostic model results
+2. Generates survival curve using TCGA data to show prognostic value
+3. Loads single-cell data and visualizes overall cell landscape (UMAP)
+4. Visualizes target gene expression on UMAP (FeaturePlot + Violin)
+5. Calculates mean expression (Type 1) and positive cell ratio (Type 2) per cell type
+6. Identifies which cell type has the highest expression
 
 **How to run:**
 
@@ -217,13 +220,22 @@ Rscript step2_singlecell.R --gene YOUR_GENE --data auto
 
 ### Step 3: Mechanism Analysis
 
-**Purpose:** Analyze the molecular mechanism of your target gene. This step determines the downstream path based on cell type analysis.
+**Purpose:** Analyze the molecular mechanism of your target gene. This step automatically determines the downstream path based on which cell type has the highest gene expression (from Step 2).
 
 **What it does:**
-1. Analyzes trajectory, stemness, and intercellular communication
-2. Determines if target gene is in hepatocytes or non-hepatocytes
-3. If in hepatocytes: generates input for SCENIC analysis (Step 4)
-4. If in non-hepatocytes: outputs microenvironment analysis results (workflow ends)
+1. Automatically reads target gene and top expressing cell type from Step 2 results
+2. Determines workflow based on cell type:
+   - **If Hepatocytes (malignant cells):** Workflow 1
+     - Extracts hepatocytes and identifies malignant cells
+     - Performs CytoTRACE stemness analysis
+     - Performs trajectory/pseudotime analysis
+     - Analyzes driver/suppressor/syml gene trends along pseudotime
+     - Performs synthetic lethal gene screening
+     - Generates SCENIC input for Step 4
+   - **If Non-hepatocytes (TME cells):** Workflow 2
+     - Performs ligand-receptor interaction analysis
+     - Performs stromal cell function analysis
+     - Performs immune microenvironment analysis
 
 **How to run:**
 
@@ -299,12 +311,13 @@ This step has two possible workflows based on cell type:
 
 ### Step 4: SCENIC Analysis
 
-**Purpose:** Build gene regulatory network using SCENIC to identify transcription factors (TFs) regulating your target gene.
+**Purpose:** Build gene regulatory network using SCENIC to identify transcription factors (TFs) that may regulate your target gene.
 
 **What it does:**
-1. Constructs co-expression network (GRNBoost2)
-2. Prunes network with motif enrichment (CTX)
-3. Calculates AUC scores for regulons
+1. Constructs co-expression network using GRNBoost2 algorithm
+2. Prunes network with motif enrichment using CTX (ctxcore)
+3. Identifies TF regulons (TF-target gene pairs)
+4. Calculates AUC (Area Under the Curve) scores for each regulon across single cells
 
 **How to run:**
 
@@ -337,13 +350,13 @@ bash step4_scenic.sh 10
 
 ### Step 5: SCENIC Downstream Analysis
 
-**Purpose:** Identify key transcription factors and analyze regulatory relationships between TFs and your target gene.
+**Purpose:** Identify key transcription factors and analyze regulatory relationships between TFs, your target gene, and a downstream gene of interest.
 
 **What it does:**
-1. Performs TF enrichment analysis
-2. Screens for mediator TFs
-3. Visualizes TF-target gene relationships
-4. Generates heatmaps and network plots
+1. Loads SCENIC AUC matrix and regulons from Step 4
+2. Performs TF enrichment analysis to find TFs with high activity
+3. Screens for mediator TFs that connect your target gene to the downstream gene
+4. Visualizes TF-target gene regulatory relationships as heatmaps and network plots
 
 **How to run:**
 
